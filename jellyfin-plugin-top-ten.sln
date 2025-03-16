@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.TopTen", "Jellyfin.Plugin.TopTen\Jellyfin.Plugin.TopTen.csproj", "{B04D2884-A3E3-251E-AFD0-C7684696AEED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0D615AB7-31F2-42EE-828D-DBAB69225939}
+	EndGlobalSection
+EndGlobal

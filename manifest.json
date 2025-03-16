@@ -1,0 +1,20 @@
+[
+    {
+        "guid": "e29b0e3d-f15a-47e6-9f05-d8f4e6260a4e",
+        "name": "Top Ten",
+        "overview": "Creates a \"Top Ten\" Collection for most popular movies/series on the server",
+        "description": "Creates a \"Top Ten\" Collection for most popular movies/series on the server",
+        "owner": "johnpc",
+        "category": "General",
+        "versions": [
+            {
+                "version": "0.0.0.1",
+                "changelog": "- See the full changelog at [GitHub](https://github.com/johnpc/jellyfin-plugin-top-ten/releases/tag/0.0.0.1)\n",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/johnpc/jellyfin-plugin-top-ten/releases/download/0.0.0.1/top-ten-0.0.0.1.zip",
+                "checksum": "f98ed5a25bc45d35bbfbb68119377429",
+                "timestamp": "2025-03-16T20:59:41Z"
+            }
+        ]
+    }
+]

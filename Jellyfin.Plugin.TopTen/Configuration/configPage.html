@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Top Ten</title>
+</head>
+<body>
+    <div id="TopTenConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
+        <div data-role="content">
+            <div class="content-primary">
+                <form class="TopTenConfigForm">
+                    <div class="inputContainer">
+                        <label for="CollectionName">Collection Name:</label>
+                        <input id="CollectionName" name="CollectionName" type="text" is="emby-input" />
+                    </div>
+                    <div class="inputContainer">
+                        <label for="TopItemCount">Number of Items:</label>
+                        <input id="TopItemCount" name="TopItemCount" type="number" min="1" max="50" is="emby-input" />
+                    </div>
+                    <div class="inputContainer">
+                        <label for="RefreshIntervalHours">Refresh Interval (hours):</label>
+                        <input id="RefreshIntervalHours" name="RefreshIntervalHours" type="number" min="1" max="168" is="emby-input" />
+                    </div>
+                    <div class="inputContainer">
+                        <label for="DaysToConsider">Days to Consider (recent playback only):</label>
+                        <input id="DaysToConsider" name="DaysToConsider" type="number" min="1" max="365" is="emby-input" />
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var TopTenConfig = {
+                pluginUniqueId: 'e29b0e3d-f15a-47e6-9f05-d8f4e6260a4e'
+            };
+
+            document.querySelector('.TopTenConfigForm')
+                .addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    
+                    ApiClient.getPluginConfiguration(TopTenConfig.pluginUniqueId).then(function (config) {
+                        config.CollectionName = document.querySelector('#CollectionName').value;
+                        config.TopItemCount = parseInt(document.querySelector('#TopItemCount').value);
+                        config.RefreshIntervalHours = parseInt(document.querySelector('#RefreshIntervalHours').value);
+                        config.DaysToConsider = parseInt(document.querySelector('#DaysToConsider').value);
+                        
+                        ApiClient.updatePluginConfiguration(TopTenConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                    
+                    return false;
+                });
+
+            document.querySelector('#TopTenConfigPage').addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                
+                ApiClient.getPluginConfiguration(TopTenConfig.pluginUniqueId).then(function (config) {
+                    document.querySelector('#CollectionName').value = config.CollectionName || 'Jellyfin Top Ten';
+                    document.querySelector('#TopItemCount').value = config.TopItemCount || 10;
+                    document.querySelector('#RefreshIntervalHours').value = config.RefreshIntervalHours || 24;
+                    document.querySelector('#DaysToConsider').value = config.DaysToConsider || 30;
+                    
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>
