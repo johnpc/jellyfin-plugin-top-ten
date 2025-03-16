@@ -1,0 +1,18 @@
+---
+name: "TopTen"
+guid: "e29b0e3d-f15a-47e6-9f05-d8f4e6260a4e"
+version: "1.0.0.0"
+targetAbi: "10.8.0.0"
+framework: "net8.0"
+overview: "Creates and maintains a collection of the top 10 most watched movies and TV shows"
+description: >
+  This plugin creates a scheduled task that runs every 24 hours to identify the top 10 movies and series watched on the Jellyfin server.
+  It creates a collection named "Jellyfin Top Ten" (configurable) and keeps it up to date by adding new popular content and removing items
+  that have fallen out of the top ten. For shows, it uses the number of total plays for the series. For movies, it uses the number of
+  users who have played the movie.
+category: "General"
+owner: "jellyfin"
+artifacts:
+  - "Jellyfin.Plugin.TopTen.dll"
+changelog: >
+  Initial release
