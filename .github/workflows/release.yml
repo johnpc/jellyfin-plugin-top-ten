@@ -47,25 +47,29 @@ jobs:
         CHECKSUM=$(md5sum jellyfin-plugin-top-ten-${{ steps.get_version.outputs.VERSION }}.zip | awk '{ print $1 }')
         echo "CHECKSUM=$CHECKSUM" >> $GITHUB_OUTPUT
     
-    - name: Create manifest for this release
+    - name: Create manifest.json
       run: |
-        cat > release-manifest.json << MANIFEST_EOF
-        [{
-          "guid": "$(jq -r '.[0].guid' manifest.json)",
-          "name": "$(jq -r '.[0].name' manifest.json)",
-          "overview": "$(jq -r '.[0].overview' manifest.json)",
-          "description": "$(jq -r '.[0].description' manifest.json)",
-          "owner": "$(jq -r '.[0].owner' manifest.json)",
-          "category": "$(jq -r '.[0].category' manifest.json)",
-          "versions": [{
-            "version": "${{ steps.get_version.outputs.VERSION }}",
-            "changelog": "See the full changelog at [GitHub](https://github.com/johnpc/jellyfin-plugin-top-ten/releases/tag/${{ steps.get_version.outputs.VERSION }})",
-            "targetAbi": "10.11.0.0",
-            "sourceUrl": "https://github.com/johnpc/jellyfin-plugin-top-ten/releases/download/${{ steps.get_version.outputs.VERSION }}/jellyfin-plugin-top-ten-${{ steps.get_version.outputs.VERSION }}.zip",
-            "checksum": "${{ steps.calculate_checksum.outputs.CHECKSUM }}",
-            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          }]
-        }]
+        cat > manifest.json << MANIFEST_EOF
+        [
+          {
+            "guid": "b9c59d7a-1f2f-5e2g-0c4f-9d6g8e7f5b4c",
+            "name": "Top Ten",
+            "overview": "Create top 10 collections based on user ratings",
+            "description": "Create top 10 collections based on user ratings",
+            "owner": "jellyfin-plugin-top-ten",
+            "category": "General",
+            "versions": [
+              {
+                "version": "${{ steps.get_version.outputs.VERSION }}",
+                "changelog": "See the full changelog at [GitHub](https://github.com/johnpc/jellyfin-plugin-top-ten/releases/tag/${{ steps.get_version.outputs.VERSION }})",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/johnpc/jellyfin-plugin-top-ten/releases/download/${{ steps.get_version.outputs.VERSION }}/jellyfin-plugin-top-ten-${{ steps.get_version.outputs.VERSION }}.zip",
+                "checksum": "${{ steps.calculate_checksum.outputs.CHECKSUM }}",
+                "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+              }
+            ]
+          }
+        ]
         MANIFEST_EOF
     
     - name: Create GitHub Release
@@ -73,19 +77,8 @@ jobs:
       with:
         files: |
           jellyfin-plugin-top-ten-${{ steps.get_version.outputs.VERSION }}.zip
-          release-manifest.json
+          manifest.json
         draft: false
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Update main manifest
-      run: |
-        chmod +x generate_manifest.sh
-        ./generate_manifest.sh
-        
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add manifest.json
-        git commit -m "Update manifest.json with version ${{ steps.get_version.outputs.VERSION }}" || echo "No changes to commit"
-        git push origin main || echo "Nothing to push"
