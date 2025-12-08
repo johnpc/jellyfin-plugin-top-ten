@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Data.Entities;
+using MediaBrowser.Controller.Entities;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.TopTen.Configuration;
 using Jellyfin.Plugin.TopTen.Models;
