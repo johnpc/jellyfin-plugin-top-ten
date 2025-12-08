@@ -4,16 +4,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Collections;
+using MediaBrowser.Controller.Library;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.TopTen.Configuration;
 using Jellyfin.Plugin.TopTen.Models;
-using MediaBrowser.Controller.Collections;
-using Jellyfin.Data.Entities;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
+using Jellyfin.Database.Implementations.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.TopTen.ScheduledTasks
@@ -79,7 +78,7 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
             {
                 new TaskTriggerInfo
                 {
-                    Type = TaskTriggerInfo.TriggerInterval,
+                    Type = TaskTriggerInfoType.IntervalTrigger,
                     IntervalTicks = TimeSpan.FromHours(hours).Ticks
                 }
             };
@@ -134,7 +133,7 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
             }
         }
 
-        private List<Movie> GetTopMovies(int count, List<User> users, DateTime cutoffDate)
+        private List<Movie> GetTopMovies(int count, IEnumerable<User> users, DateTime cutoffDate)
         {
             _logger.LogInformation("Finding top {Count} movies since {CutoffDate}", count, cutoffDate.ToString("yyyy-MM-dd"));
             
