@@ -8,6 +8,7 @@ using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.TopTen.Configuration;
 using Jellyfin.Plugin.TopTen.Models;
 using MediaBrowser.Controller.Collections;
+using Jellyfin.Data.Entities;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
