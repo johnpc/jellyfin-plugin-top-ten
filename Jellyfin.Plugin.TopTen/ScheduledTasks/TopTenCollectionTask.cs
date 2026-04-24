@@ -12,6 +12,7 @@ using Jellyfin.Plugin.TopTen.Models;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Tasks;
+using MediaBrowser.Model.Entities;
 using Jellyfin.Database.Implementations.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -181,11 +182,13 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
                     moviePlaybackInfo[movie.Id] = playbackInfo;
                 }
 
-                // Get top movies by unique user count
+                // Get top movies by unique user count, deduplicating across libraries (e.g. 1080p + 4K)
                 return movies
                     .Where(m => moviePlaybackInfo.ContainsKey(m.Id) && moviePlaybackInfo[m.Id].UniqueUserCount > 0)
                     .OrderByDescending(m => moviePlaybackInfo[m.Id].UniqueUserCount)
                     .ThenByDescending(m => moviePlaybackInfo[m.Id].PlayCount)
+                    .GroupBy(m => m.GetProviderId(MediaBrowser.Model.Entities.MetadataProvider.Tmdb) ?? m.GetProviderId(MediaBrowser.Model.Entities.MetadataProvider.Imdb) ?? m.Id.ToString())
+                    .Select(g => g.First())
                     .Take(count)
                     .ToList();
             }
@@ -256,11 +259,13 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
                     seriesPlaybackInfo[s.Id] = playbackInfo;
                 }
 
-                // Get top series by total play count within the period
+                // Get top series by total play count, deduplicating across libraries
                 return series
                     .Where(s => seriesPlaybackInfo.ContainsKey(s.Id) && seriesPlaybackInfo[s.Id].PlayCount > 0)
                     .OrderByDescending(s => seriesPlaybackInfo[s.Id].PlayCount)
                     .ThenByDescending(s => seriesPlaybackInfo[s.Id].UniqueUserCount)
+                    .GroupBy(s => s.GetProviderId(MediaBrowser.Model.Entities.MetadataProvider.Tmdb) ?? s.GetProviderId(MediaBrowser.Model.Entities.MetadataProvider.Tvdb) ?? s.Id.ToString())
+                    .Select(g => g.First())
                     .Take(count)
                     .ToList();
             }
