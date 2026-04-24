@@ -4,16 +4,16 @@
     "name": "Top Ten",
     "overview": "Create top 10 collections based on user ratings",
     "description": "Create top 10 collections based on user ratings",
-    "owner": "jellyfin-plugin-top-ten",
+    "owner": "johnpc",
     "category": "General",
     "versions": [
       {
-        "version": "0.0.0.8",
-        "changelog": "See the full changelog at [GitHub](https://github.com/johnpc/jellyfin-plugin-top-ten/releases/tag/0.0.0.8)",
+        "version": "0.0.0.9",
+        "changelog": "See the full changelog at [GitHub](https://github.com/johnpc/jellyfin-plugin-top-ten/releases/tag/0.0.0.9)",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/johnpc/jellyfin-plugin-top-ten/releases/download/0.0.0.8/jellyfin-plugin-top-ten-0.0.0.8.zip",
-        "checksum": "4e67adcdd28365fcfd26c74c73759de3",
-        "timestamp": "2025-12-08T04:25:36Z"
+        "sourceUrl": "https://github.com/johnpc/jellyfin-plugin-top-ten/releases/download/0.0.0.9/jellyfin-plugin-top-ten-0.0.0.9.zip",
+        "checksum": "f4c65e85e0b0e6ee0d566e359de0794e",
+        "timestamp": "2026-04-24T05:57:35Z"
       }
     ]
   }
