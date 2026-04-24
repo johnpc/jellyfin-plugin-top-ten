@@ -13,6 +13,10 @@
                         <input id="CollectionName" name="CollectionName" type="text" is="emby-input" />
                     </div>
                     <div class="inputContainer">
+                        <label for="CollectionOverview">Collection Overview/Description:</label>
+                        <input id="CollectionOverview" name="CollectionOverview" type="text" is="emby-input" placeholder="Optional description for the collection" />
+                    </div>
+                    <div class="inputContainer">
                         <label for="TopItemCount">Number of Items:</label>
                         <input id="TopItemCount" name="TopItemCount" type="number" min="1" max="50" is="emby-input" />
                     </div>
@@ -44,6 +48,7 @@
                     
                     ApiClient.getPluginConfiguration(TopTenConfig.pluginUniqueId).then(function (config) {
                         config.CollectionName = document.querySelector('#CollectionName').value;
+                        config.CollectionOverview = document.querySelector('#CollectionOverview').value;
                         config.TopItemCount = parseInt(document.querySelector('#TopItemCount').value);
                         config.RefreshIntervalHours = parseInt(document.querySelector('#RefreshIntervalHours').value);
                         config.DaysToConsider = parseInt(document.querySelector('#DaysToConsider').value);
@@ -61,6 +66,7 @@
                 
                 ApiClient.getPluginConfiguration(TopTenConfig.pluginUniqueId).then(function (config) {
                     document.querySelector('#CollectionName').value = config.CollectionName || 'Jellyfin Top Ten';
+                    document.querySelector('#CollectionOverview').value = config.CollectionOverview || '';
                     document.querySelector('#TopItemCount').value = config.TopItemCount || 10;
                     document.querySelector('#RefreshIntervalHours').value = config.RefreshIntervalHours || 24;
                     document.querySelector('#DaysToConsider').value = config.DaysToConsider || 30;

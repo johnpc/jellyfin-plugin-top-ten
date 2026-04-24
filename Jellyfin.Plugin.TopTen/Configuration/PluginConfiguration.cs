@@ -16,12 +16,24 @@ namespace Jellyfin.Plugin.TopTen.Configuration
             TopItemCount = 10;
             RefreshIntervalHours = 24;
             DaysToConsider = 30;
+            CollectionOverview = "";
+            PreviousCollectionName = "";
         }
 
         /// <summary>
         /// Gets or sets the name of the collection to create.
         /// </summary>
         public string CollectionName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the previous collection name (for rename cleanup).
+        /// </summary>
+        public string PreviousCollectionName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the collection overview/description.
+        /// </summary>
+        public string CollectionOverview { get; set; }
 
         /// <summary>
         /// Gets or sets the number of top items to include.

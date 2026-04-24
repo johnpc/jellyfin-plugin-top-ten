@@ -110,6 +110,9 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
 
             try
             {
+                // Clean up old collection if name was changed
+                await CleanupRenamedCollectionAsync(config, cancellationToken).ConfigureAwait(false);
+
                 // Get all users
                 var users = _userManager.Users.ToList();
                 
@@ -301,6 +304,21 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
                     }).ConfigureAwait(false);
                 }
 
+                // Set overview if configured
+                var config = Plugin.Instance?.Configuration;
+                if (config != null && !string.IsNullOrWhiteSpace(config.CollectionOverview) && collection.Overview != config.CollectionOverview)
+                {
+                    collection.Overview = config.CollectionOverview;
+                    await collection.UpdateToRepositoryAsync(MediaBrowser.Controller.Library.ItemUpdateType.MetadataEdit, cancellationToken).ConfigureAwait(false);
+                }
+
+                // Track the collection name for rename detection
+                if (config != null && config.PreviousCollectionName != collectionName)
+                {
+                    config.PreviousCollectionName = collectionName;
+                    Plugin.Instance!.SaveConfiguration();
+                }
+
                 // Get current items in the collection
                 var currentItems = collection.GetLinkedChildren();
                 var currentItemIds = currentItems.Select(i => i.Id).ToList();
@@ -328,6 +346,27 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
             {
                 _logger.LogError(ex, "Error updating collection");
                 throw;
+            }
+        }
+        private async Task CleanupRenamedCollectionAsync(PluginConfiguration config, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(config.PreviousCollectionName) || config.PreviousCollectionName == config.CollectionName)
+            {
+                return;
+            }
+
+            _logger.LogInformation("Collection renamed from '{OldName}' to '{NewName}', cleaning up old collection", config.PreviousCollectionName, config.CollectionName);
+
+            var oldCollection = _libraryManager.GetItemList(new InternalItemsQuery
+            {
+                IncludeItemTypes = BoxSetKinds,
+                Name = config.PreviousCollectionName
+            }).FirstOrDefault() as BoxSet;
+
+            if (oldCollection != null)
+            {
+                _logger.LogInformation("Deleting old collection: {Name}", config.PreviousCollectionName);
+                _libraryManager.DeleteItem(oldCollection, new DeleteOptions { DeleteFileLocation = true });
             }
         }
     }
