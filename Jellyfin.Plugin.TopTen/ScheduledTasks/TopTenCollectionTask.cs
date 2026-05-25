@@ -3,17 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Collections;
-using MediaBrowser.Controller.Library;
-using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.TopTen.Configuration;
-using Jellyfin.Plugin.TopTen.Models;
-using MediaBrowser.Controller.Entities.Movies;
-using MediaBrowser.Controller.Entities.TV;
+using Jellyfin.Plugin.TopTen.Services;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
-using MediaBrowser.Model.Entities;
-using Jellyfin.Database.Implementations.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.TopTen.ScheduledTasks
@@ -24,36 +18,27 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
     public class TopTenCollectionTask : IScheduledTask
     {
         private readonly ILogger<TopTenCollectionTask> _logger;
-        private readonly ILibraryManager _libraryManager;
-        private readonly ICollectionManager _collectionManager;
         private readonly IUserManager _userManager;
-        private readonly IUserDataManager _userDataManager;
-
-        private static readonly BaseItemKind[] MovieKinds = new[] { BaseItemKind.Movie };
-        private static readonly BaseItemKind[] SeriesKinds = new[] { BaseItemKind.Series };
-        private static readonly BaseItemKind[] EpisodeKinds = new[] { BaseItemKind.Episode };
-        private static readonly BaseItemKind[] BoxSetKinds = new[] { BaseItemKind.BoxSet };
+        private readonly IPlaybackRankingService _rankingService;
+        private readonly ICollectionSyncService _collectionSyncService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TopTenCollectionTask"/> class.
         /// </summary>
-        /// <param name="logger">Instance of the <see cref="ILogger"/> interface.</param>
-        /// <param name="libraryManager">Instance of the <see cref="ILibraryManager"/> interface.</param>
-        /// <param name="collectionManager">Instance of the <see cref="ICollectionManager"/> interface.</param>
+        /// <param name="logger">Instance of the <see cref="ILogger{TopTenCollectionTask}"/> interface.</param>
         /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
-        /// <param name="userDataManager">Instance of the <see cref="IUserDataManager"/> interface.</param>
+        /// <param name="rankingService">Instance of the <see cref="IPlaybackRankingService"/> interface.</param>
+        /// <param name="collectionSyncService">Instance of the <see cref="ICollectionSyncService"/> interface.</param>
         public TopTenCollectionTask(
             ILogger<TopTenCollectionTask> logger,
-            ILibraryManager libraryManager,
-            ICollectionManager collectionManager,
             IUserManager userManager,
-            IUserDataManager userDataManager)
+            IPlaybackRankingService rankingService,
+            ICollectionSyncService collectionSyncService)
         {
             _logger = logger;
-            _libraryManager = libraryManager;
-            _collectionManager = collectionManager;
             _userManager = userManager;
-            _userDataManager = userDataManager;
+            _rankingService = rankingService;
+            _collectionSyncService = collectionSyncService;
         }
 
         /// <inheritdoc />
@@ -71,27 +56,23 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
         /// <inheritdoc />
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
-            // Run task every 24 hours
             var config = Plugin.Instance?.Configuration;
             int hours = config?.RefreshIntervalHours ?? 24;
-            
+
             return new[]
             {
                 new TaskTriggerInfo
                 {
                     Type = TaskTriggerInfoType.IntervalTrigger,
-                    IntervalTicks = TimeSpan.FromHours(hours).Ticks
-                }
+                    IntervalTicks = TimeSpan.FromHours(hours).Ticks,
+                },
             };
         }
 
         /// <inheritdoc />
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            if (progress == null)
-            {
-                throw new ArgumentNullException(nameof(progress));
-            }
+            ArgumentNullException.ThrowIfNull(progress);
 
             _logger.LogInformation("Starting Top Ten Collection update task");
             progress.Report(0);
@@ -103,272 +84,31 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
                 return;
             }
 
-            var collectionName = config.CollectionName;
-            var topCount = config.TopItemCount;
-            var daysToConsider = config.DaysToConsider;
-            var cutoffDate = DateTime.UtcNow.AddDays(-daysToConsider);
+            var cutoffDate = DateTime.UtcNow.AddDays(-config.DaysToConsider);
+            var users = _userManager.GetUsers().ToList();
 
-            try
+            await _collectionSyncService.CleanupRenamedCollectionAsync(config, cancellationToken).ConfigureAwait(false);
+
+            var topMovies = _rankingService.GetTopMovies(config.TopItemCount, users, cutoffDate);
+            progress.Report(33);
+
+            var topSeries = _rankingService.GetTopSeries(config.TopItemCount, users, cutoffDate);
+            progress.Report(66);
+
+            var allItems = topMovies.Cast<BaseItem>().Concat(topSeries.Cast<BaseItem>()).ToList();
+            var overview = config.CollectionOverview ?? string.Empty;
+
+            await _collectionSyncService.UpdateCollectionAsync(
+                config.CollectionName, overview, allItems, cancellationToken).ConfigureAwait(false);
+
+            if (config.PreviousCollectionName != config.CollectionName)
             {
-                // Clean up old collection if name was changed
-                await CleanupRenamedCollectionAsync(config, cancellationToken).ConfigureAwait(false);
-
-                // Get all users
-                var users = _userManager.GetUsers().ToList();
-                
-                // Get top movies based on unique user plays
-                var topMovies = GetTopMovies(topCount, users, cutoffDate);
-                progress.Report(33);
-
-                // Get top series based on total play count
-                var topSeries = GetTopSeries(topCount, cutoffDate);
-                progress.Report(66);
-
-                // Create or update the collection
-                await UpdateCollectionAsync(collectionName, topMovies.Concat<BaseItem>(topSeries).ToList(), cancellationToken).ConfigureAwait(false);
-                progress.Report(100);
-
-                _logger.LogInformation("Top Ten Collection update task completed successfully");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating Top Ten Collection");
-                throw;
-            }
-        }
-
-        private List<Movie> GetTopMovies(int count, IEnumerable<User> users, DateTime cutoffDate)
-        {
-            _logger.LogInformation("Finding top {Count} movies since {CutoffDate}", count, cutoffDate.ToString("yyyy-MM-dd"));
-            
-            try
-            {
-                // Get all movies
-                var movies = _libraryManager.GetItemList(new InternalItemsQuery
-                {
-                    IncludeItemTypes = MovieKinds,
-                    Recursive = true
-                })
-                .Cast<Movie>()
-                .ToList();
-
-                // Create PlaybackInfo objects for each movie
-                var moviePlaybackInfo = new Dictionary<Guid, PlaybackInfo>();
-                
-                foreach (var movie in movies)
-                {
-                    var playbackInfo = new PlaybackInfo
-                    {
-                        Id = movie.Id,
-                        Name = movie.Name,
-                        PlayCount = 0,
-                        UniqueUserCount = 0
-                    };
-
-                    // Count unique users who have played this movie within the cutoff period
-                    foreach (var user in users)
-                    {
-                        // Check if user has played this movie by looking at their UserData
-                        var userData = _userDataManager.GetUserData(user, movie);
-                        
-                        // Only count plays that happened after the cutoff date
-                        if (userData != null && userData.LastPlayedDate.HasValue && userData.LastPlayedDate.Value >= cutoffDate)
-                        {
-                            playbackInfo.UniqueUserCount++;
-                            
-                            // Try to estimate recent play count based on last played date
-                            // This is an approximation since Jellyfin doesn't store play dates for each play
-                            playbackInfo.PlayCount++;
-                        }
-                    }
-                    
-                    moviePlaybackInfo[movie.Id] = playbackInfo;
-                }
-
-                // Get top movies by unique user count, deduplicating across libraries (e.g. 1080p + 4K)
-                return movies
-                    .Where(m => moviePlaybackInfo.ContainsKey(m.Id) && moviePlaybackInfo[m.Id].UniqueUserCount > 0)
-                    .OrderByDescending(m => moviePlaybackInfo[m.Id].UniqueUserCount)
-                    .ThenByDescending(m => moviePlaybackInfo[m.Id].PlayCount)
-                    .GroupBy(m => m.GetProviderId(MediaBrowser.Model.Entities.MetadataProvider.Tmdb) ?? m.GetProviderId(MediaBrowser.Model.Entities.MetadataProvider.Imdb) ?? m.Id.ToString())
-                    .Select(g => g.First())
-                    .Take(count)
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting top movies");
-                return new List<Movie>();
-            }
-        }
-
-        private List<Series> GetTopSeries(int count, DateTime cutoffDate)
-        {
-            _logger.LogInformation("Finding top {Count} series since {CutoffDate}", count, cutoffDate.ToString("yyyy-MM-dd"));
-            
-            try
-            {
-                // Get all series
-                var series = _libraryManager.GetItemList(new InternalItemsQuery
-                {
-                    IncludeItemTypes = SeriesKinds,
-                    Recursive = true
-                })
-                .Cast<Series>()
-                .ToList();
-
-                // Create PlaybackInfo objects for each series
-                var seriesPlaybackInfo = new Dictionary<Guid, PlaybackInfo>();
-                var users = _userManager.GetUsers().ToList();
-
-                foreach (var s in series)
-                {
-                    var playbackInfo = new PlaybackInfo
-                    {
-                        Id = s.Id,
-                        Name = s.Name,
-                        PlayCount = 0,
-                        UniqueUserCount = 0
-                    };
-
-                    // Get all episodes for this series
-                    var episodes = _libraryManager.GetItemList(new InternalItemsQuery
-                    {
-                        IncludeItemTypes = EpisodeKinds,
-                        Recursive = true,
-                        AncestorIds = new[] { s.Id }
-                    })
-                    .Cast<Episode>();
-
-                    // Track unique users who watched this series within the cutoff period
-                    var uniqueUsers = new HashSet<Guid>();
-
-                    // Sum up play counts from all episodes within the cutoff period
-                    foreach (var episode in episodes)
-                    {
-                        foreach (var user in users)
-                        {
-                            var userData = _userDataManager.GetUserData(user, episode);
-                            
-                            // Only count plays that happened after the cutoff date
-                            if (userData != null && userData.LastPlayedDate.HasValue && userData.LastPlayedDate.Value >= cutoffDate)
-                            {
-                                playbackInfo.PlayCount++;
-                                uniqueUsers.Add(user.Id);
-                            }
-                        }
-                    }
-                    
-                    playbackInfo.UniqueUserCount = uniqueUsers.Count;
-                    seriesPlaybackInfo[s.Id] = playbackInfo;
-                }
-
-                // Get top series by total play count, deduplicating across libraries
-                return series
-                    .Where(s => seriesPlaybackInfo.ContainsKey(s.Id) && seriesPlaybackInfo[s.Id].PlayCount > 0)
-                    .OrderByDescending(s => seriesPlaybackInfo[s.Id].PlayCount)
-                    .ThenByDescending(s => seriesPlaybackInfo[s.Id].UniqueUserCount)
-                    .GroupBy(s => s.GetProviderId(MediaBrowser.Model.Entities.MetadataProvider.Tmdb) ?? s.GetProviderId(MediaBrowser.Model.Entities.MetadataProvider.Tvdb) ?? s.Id.ToString())
-                    .Select(g => g.First())
-                    .Take(count)
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting top series");
-                return new List<Series>();
-            }
-        }
-
-        private async Task UpdateCollectionAsync(string collectionName, List<BaseItem> items, CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Updating collection: {CollectionName} with {Count} items", collectionName, items.Count);
-            
-            try
-            {
-                // Find existing collection or create a new one
-                var collection = _libraryManager.GetItemList(new InternalItemsQuery
-                {
-                    IncludeItemTypes = BoxSetKinds,
-                    Name = collectionName
-                })
-                .FirstOrDefault() as BoxSet;
-
-                if (collection == null)
-                {
-                    _logger.LogInformation("Creating new collection: {CollectionName}", collectionName);
-                    collection = await _collectionManager.CreateCollectionAsync(new CollectionCreationOptions
-                    {
-                        Name = collectionName,
-                        ItemIdList = new List<string>(),
-                        IsLocked = true
-                    }).ConfigureAwait(false);
-                }
-
-                // Set overview if configured
-                var config = Plugin.Instance?.Configuration;
-                if (config != null && !string.IsNullOrWhiteSpace(config.CollectionOverview) && collection.Overview != config.CollectionOverview)
-                {
-                    collection.Overview = config.CollectionOverview;
-                    await collection.UpdateToRepositoryAsync(MediaBrowser.Controller.Library.ItemUpdateType.MetadataEdit, cancellationToken).ConfigureAwait(false);
-                }
-
-                // Track the collection name for rename detection
-                if (config != null && config.PreviousCollectionName != collectionName)
-                {
-                    config.PreviousCollectionName = collectionName;
-                    Plugin.Instance!.SaveConfiguration();
-                }
-
-                // Get current items in the collection
-                var currentItems = collection.GetLinkedChildren();
-                var currentItemIds = currentItems.Select(i => i.Id).ToList();
-                
-                // Get items to add and remove
-                var itemsToAdd = items.Where(i => !currentItemIds.Contains(i.Id)).ToList();
-                var itemsToRemove = currentItems.Where(i => !items.Any(newItem => newItem.Id == i.Id)).ToList();
-
-                // Update collection
-                if (itemsToAdd.Count > 0)
-                {
-                    _logger.LogInformation("Adding {Count} items to collection", itemsToAdd.Count);
-                    await _collectionManager.AddToCollectionAsync(collection.Id, itemsToAdd.Select(i => i.Id).ToArray())
-                        .ConfigureAwait(false);
-                }
-
-                if (itemsToRemove.Count > 0)
-                {
-                    _logger.LogInformation("Removing {Count} items from collection", itemsToRemove.Count);
-                    await _collectionManager.RemoveFromCollectionAsync(collection.Id, itemsToRemove.Select(i => i.Id).ToArray())
-                        .ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating collection");
-                throw;
-            }
-        }
-        private async Task CleanupRenamedCollectionAsync(PluginConfiguration config, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrEmpty(config.PreviousCollectionName) || config.PreviousCollectionName == config.CollectionName)
-            {
-                return;
+                config.PreviousCollectionName = config.CollectionName;
+                Plugin.Instance!.SaveConfiguration();
             }
 
-            _logger.LogInformation("Collection renamed from '{OldName}' to '{NewName}', cleaning up old collection", config.PreviousCollectionName, config.CollectionName);
-
-            var oldCollection = _libraryManager.GetItemList(new InternalItemsQuery
-            {
-                IncludeItemTypes = BoxSetKinds,
-                Name = config.PreviousCollectionName
-            }).FirstOrDefault() as BoxSet;
-
-            if (oldCollection != null)
-            {
-                _logger.LogInformation("Deleting old collection: {Name}", config.PreviousCollectionName);
-                _libraryManager.DeleteItem(oldCollection, new DeleteOptions { DeleteFileLocation = true });
-            }
+            progress.Report(100);
+            _logger.LogInformation("Top Ten Collection update task completed successfully");
         }
     }
 }

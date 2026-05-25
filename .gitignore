@@ -344,3 +344,6 @@ healthchecksdb
 .DS_Store
 
 *.zip
+
+# Test coverage
+coverage/
