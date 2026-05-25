@@ -114,7 +114,7 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
                 await CleanupRenamedCollectionAsync(config, cancellationToken).ConfigureAwait(false);
 
                 // Get all users
-                var users = _userManager.Users.ToList();
+                var users = _userManager.GetUsers().ToList();
                 
                 // Get top movies based on unique user plays
                 var topMovies = GetTopMovies(topCount, users, cutoffDate);
@@ -219,7 +219,8 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
 
                 // Create PlaybackInfo objects for each series
                 var seriesPlaybackInfo = new Dictionary<Guid, PlaybackInfo>();
-                
+                var users = _userManager.GetUsers().ToList();
+
                 foreach (var s in series)
                 {
                     var playbackInfo = new PlaybackInfo
@@ -245,7 +246,7 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
                     // Sum up play counts from all episodes within the cutoff period
                     foreach (var episode in episodes)
                     {
-                        foreach (var user in _userManager.Users)
+                        foreach (var user in users)
                         {
                             var userData = _userDataManager.GetUserData(user, episode);
                             
