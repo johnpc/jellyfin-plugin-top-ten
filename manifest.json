@@ -8,12 +8,12 @@
     "category": "General",
     "versions": [
       {
-        "version": "0.0.0.10",
-        "changelog": "See the full changelog at [GitHub](https://github.com/johnpc/jellyfin-plugin-top-ten/releases/tag/0.0.0.10)",
+        "version": "0.0.0.11",
+        "changelog": "See the full changelog at [GitHub](https://github.com/johnpc/jellyfin-plugin-top-ten/releases/tag/0.0.0.11)",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/johnpc/jellyfin-plugin-top-ten/releases/download/0.0.0.10/jellyfin-plugin-top-ten-0.0.0.10.zip",
-        "checksum": "41ad87e4de9cd78dfebd8e15fb487ce4",
-        "timestamp": "2026-04-24T06:03:26Z"
+        "sourceUrl": "https://github.com/johnpc/jellyfin-plugin-top-ten/releases/download/0.0.0.11/jellyfin-plugin-top-ten-0.0.0.11.zip",
+        "checksum": "8cd840c52f6f1f7ce5ca8e4c4aea33e2",
+        "timestamp": "2026-05-25T14:54:27Z"
       }
     ]
   }
