@@ -219,7 +219,8 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
 
                 // Create PlaybackInfo objects for each series
                 var seriesPlaybackInfo = new Dictionary<Guid, PlaybackInfo>();
-                
+                var users = _userManager.GetUsers().ToList();
+
                 foreach (var s in series)
                 {
                     var playbackInfo = new PlaybackInfo
@@ -245,7 +246,7 @@ namespace Jellyfin.Plugin.TopTen.ScheduledTasks
                     // Sum up play counts from all episodes within the cutoff period
                     foreach (var episode in episodes)
                     {
-                        foreach (var user in _userManager.GetUsers())
+                        foreach (var user in users)
                         {
                             var userData = _userDataManager.GetUserData(user, episode);
                             
