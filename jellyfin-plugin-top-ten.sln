@@ -1,19 +1,60 @@
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.TopTen", "Jellyfin.Plugin.TopTen\Jellyfin.Plugin.TopTen.csproj", "{B04D2884-A3E3-251E-AFD0-C7684696AEED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.TopTen.Tests", "Jellyfin.Plugin.TopTen.Tests\Jellyfin.Plugin.TopTen.Tests.csproj", "{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.TopTen.AcceptanceTests", "Jellyfin.Plugin.TopTen.AcceptanceTests\Jellyfin.Plugin.TopTen.AcceptanceTests.csproj", "{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Debug|x64.Build.0 = Debug|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Debug|x86.Build.0 = Debug|Any CPU
 		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Release|x64.ActiveCfg = Release|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Release|x64.Build.0 = Release|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Release|x86.ActiveCfg = Release|Any CPU
+		{B04D2884-A3E3-251E-AFD0-C7684696AEED}.Release|x86.Build.0 = Release|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Debug|x64.Build.0 = Debug|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Debug|x86.Build.0 = Debug|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Release|x64.ActiveCfg = Release|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Release|x64.Build.0 = Release|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Release|x86.ActiveCfg = Release|Any CPU
+		{ADD6C93E-AB12-4B3D-8A21-2ACAAAC2055F}.Release|x86.Build.0 = Release|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Debug|x64.Build.0 = Debug|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Debug|x86.Build.0 = Debug|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Release|x64.ActiveCfg = Release|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Release|x64.Build.0 = Release|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Release|x86.ActiveCfg = Release|Any CPU
+		{A4DC4630-537D-40C9-9B09-0BC28D2E6FDE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

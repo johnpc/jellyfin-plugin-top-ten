@@ -14,11 +14,6 @@ namespace Jellyfin.Plugin.TopTen
     public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         /// <summary>
-        /// Gets the current plugin instance.
-        /// </summary>
-        public static Plugin? Instance { get; private set; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="Plugin"/> class.
         /// </summary>
         /// <param name="applicationPaths">Instance of the <see cref="IApplicationPaths"/> interface.</param>
@@ -28,6 +23,11 @@ namespace Jellyfin.Plugin.TopTen
         {
             Instance = this;
         }
+
+        /// <summary>
+        /// Gets the current plugin instance.
+        /// </summary>
+        public static Plugin? Instance { get; private set; }
 
         /// <inheritdoc />
         public override string Name => "Top Ten";
@@ -43,8 +43,8 @@ namespace Jellyfin.Plugin.TopTen
                 new PluginPageInfo
                 {
                     Name = Name,
-                    EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html"
-                }
+                    EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
+                },
             };
         }
     }

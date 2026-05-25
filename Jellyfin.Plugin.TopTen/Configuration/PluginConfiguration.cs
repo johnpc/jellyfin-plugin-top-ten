@@ -16,8 +16,8 @@ namespace Jellyfin.Plugin.TopTen.Configuration
             TopItemCount = 10;
             RefreshIntervalHours = 24;
             DaysToConsider = 30;
-            CollectionOverview = "";
-            PreviousCollectionName = "";
+            CollectionOverview = string.Empty;
+            PreviousCollectionName = string.Empty;
         }
 
         /// <summary>

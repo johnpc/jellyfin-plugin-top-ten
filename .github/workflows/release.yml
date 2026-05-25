@@ -9,8 +9,50 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore jellyfin-plugin-top-ten.sln
+
+    - name: Check formatting
+      run: dotnet format jellyfin-plugin-top-ten.sln --verify-no-changes
+
+    - name: Build (strict)
+      run: dotnet build jellyfin-plugin-top-ten.sln --configuration Release --no-restore /p:TreatWarningsAsErrors=true
+
+    - name: Run unit tests with coverage
+      run: |
+        dotnet test Jellyfin.Plugin.TopTen.Tests/Jellyfin.Plugin.TopTen.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          /p:CollectCoverage=true \
+          /p:CoverletOutputFormat=json \
+          /p:CoverletOutput=../coverage/coverage.json \
+          /p:Include="[Jellyfin.Plugin.TopTen]*" \
+          /p:ThresholdType=line \
+          /p:Threshold=80
+
+    - name: Run acceptance tests
+      run: |
+        dotnet test Jellyfin.Plugin.TopTen.AcceptanceTests/Jellyfin.Plugin.TopTen.AcceptanceTests.csproj \
+          --configuration Release \
+          --no-build
+
+    - name: CRAP score check
+      run: bash scripts/check-crap.sh coverage/coverage.json
+
+  release:
+    runs-on: ubuntu-latest
+    needs: validate
 
     steps:
     - uses: actions/checkout@v4
@@ -34,13 +76,13 @@ jobs:
         dotnet-version: 9.0.x
 
     - name: Restore dependencies
-      run: dotnet restore jellyfin-plugin-top-ten.sln
+      run: dotnet restore Jellyfin.Plugin.TopTen/Jellyfin.Plugin.TopTen.csproj
 
-    - name: Build
+    - name: Build release
       run: |
         VERSION=${{ steps.get_version.outputs.VERSION }}
-        dotnet build jellyfin-plugin-top-ten.sln --configuration Release --no-restore \
-          /p:TreatWarningsAsErrors=false \
+        dotnet build Jellyfin.Plugin.TopTen/Jellyfin.Plugin.TopTen.csproj --configuration Release --no-restore \
+          /p:TreatWarningsAsErrors=true \
           /p:Version=$VERSION \
           /p:AssemblyVersion=$VERSION \
           /p:FileVersion=$VERSION
@@ -49,7 +91,7 @@ jobs:
       run: |
         VERSION=${{ steps.get_version.outputs.VERSION }}
         mkdir -p release
-        find . -path "*/bin/Release/net9.0/*.dll" -exec cp {} release/ \;
+        find Jellyfin.Plugin.TopTen -path "*/bin/Release/net9.0/*.dll" -exec cp {} release/ \;
         cd release
         zip -r ../jellyfin-plugin-top-ten-${VERSION}.zip .
 
