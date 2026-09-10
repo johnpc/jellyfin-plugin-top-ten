@@ -11,6 +11,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Validate manifest.json
+      run: python3 scripts/validate-manifest.py
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
